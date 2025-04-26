@@ -63,11 +63,43 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Неверный пароль.' });
         }
 
+        return res.status(200).json({ 
+            message: 'Вход выполнен успешно!', 
+            user: { id: user.id, email: user.email }
+        });
+
     } catch (error) {
         console.error('Ошибка при входе:', error);
         return res.status(500).json({ error: 'Ошибка сервера при авторизации' });
     }
 });
+
+app.post('/api/record', async (req, res)  => {
+    console.log('Полученные данные:', req.body);
+
+    try {
+        const { name, phone, doctor, service, date } = req.body;
+
+        if (!name || !phone || !doctor || !service || !date) {
+            return res.status(400).json({ error: 'Все поля обязательны.' });
+        }
+
+        const { data, error } = await supabase
+            .from('record')
+            .insert([{ name, phone, doctor, service, date }]);
+
+            if (error) {
+                throw new Error(error.message);
+            }
+            
+                res.status(201).json({ message: 'Вы успешно записались на прием! Если вы не придете на прием, то с вас спишется штраф 5000 рублей, удачи!!!', data });
+            } catch (err)
+            {
+                console.error('Ошибка при записи:', err.message); // Проверяем ошибку
+                res.status(500).json({ error: err.message });          
+            };
+})
+
 const PORT = process.env.PORT || 3000
 
 app.listen(PORT,() =>{
